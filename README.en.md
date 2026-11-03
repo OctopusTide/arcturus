@@ -1,119 +1,109 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/cover-en-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/cover-en-light.svg">
-    <img alt="Arcturus looks after the AI on your computer. Keep running: you leave, the work keeps going. Accounts and storage: find out which chat wrote what. Protection: VPN drops, the program goes offline." src="docs/assets/cover-en-light.svg" width="100%">
-  </picture>
-</p>
+# Arcturus
 
-<p align="center">
-  <a href="README.md">简体中文</a>
-</p>
+[![Windows](https://img.shields.io/badge/platform-Windows-57606a?style=flat-square)](docs/BUILDING.md)
+[![Rust](https://img.shields.io/badge/built_with-Rust-57606a?style=flat-square)](docs/BUILDING.md)
+[![Agents](https://img.shields.io/badge/agents-Claude_Code_·_Codex-57606a?style=flat-square)](docs/STATUS.md)
+[![MIT](https://img.shields.io/badge/license-MIT-57606a?style=flat-square)](LICENSE)
 
-If you run long jobs with Claude Code or Codex, you know the drill.
+[中文](README.md) · English
 
-You walk away, the laptop goes to sleep, and the job dies. Or the Wi-Fi blips, the agent throws an error and stops, and you come back to find it hasn't moved in two hours.
+Arcturus is a Windows background program for Claude Code and Codex. It does three things:
 
-When it does finish, your disk is full of stuff. Two days later you can't remember which chat downloaded what, and you're scared to delete any of it.
+- **Keep running**: your tasks keep going after you leave the computer.
+- **Accounts and storage**: find out which chat created a file; assign chats to different accounts (in development).
+- **Protection**: programs that must stay open stay open; when the VPN drops, the programs you chose lose network access.
 
-And when memory runs out, what gets closed? When your VPN drops, did that program just go out over your real connection?
-
-Arcturus deals with all of that. It runs in the background and keeps an eye on things.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/map-en-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/map-en-light.svg">
+  <img alt="Feature map. Keep running: mode, power, task, resume, network, resource, relay. Accounts and storage: agents, files, and scope, search, cleanup in development. Protection: permission, exit_guard." src="docs/assets/map-en-light.svg" width="846">
+</picture>
 
 ## Keep running
 
-Tell it which task matters and the laptop stays awake, even with the lid shut as long as it's plugged in.
-
-If the network drops, it waits. When the network's back, Claude Code picks up the same conversation. With Codex, it just lets you know.
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/story-en-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/story-en-light.svg">
-    <img alt="Without Arcturus the work stops when the lid closes or the network drops. With it, the agent waits and keeps going." src="docs/assets/story-en-light.svg" width="100%">
-  </picture>
-</p>
-
-While you're gone, if the Wi-Fi is connected but dead, it switches to another network you've used. If things get too hot it cools down, and if the battery's nearly out it hibernates.
-
-When you come back, any settings it touched go back to how they were. It won't restart a chat you closed yourself, and a resumed agent never gets more permission than it had.
+- **Away mode**: Run `away` and the computer locks and turns off the screen while tasks keep running. Run `back` or unlock the computer and every setting it changed goes back. It records each original value first, so it can still restore them after a crash. `back` gives you a report: how long you were gone, how many network drops, which programs were frozen or closed, and the peak temperature.
+- **No sleep**: The computer stays awake while a task is protected or away mode is on. On AC power, that includes with the lid closed.
+- **Task protection**: Run `protect --pid <id>` to choose a program. It and the programs it starts won't be frozen or closed, and the same goes for the WSL or Docker it uses. Protection ends when the program exits. It also ends after 10 minutes with no activity, but the program is left running.
+- **Continue after a network drop**: When Claude Code stops because the network dropped, it continues the same chat once the network is back, with the same permissions and model. If the original window is still open, it continues in a fork and leaves the original chat alone. It tries up to 3 times per drop and waits up to 2 hours. Chats you closed yourself stay closed. Codex only gets a notification for now.
+- **Network failover**: When the Wi-Fi is connected but has no internet, Windows doesn't switch by itself. In away mode, Arcturus goes through your other saved networks with phone hotspots last, and switches back when the original returns. Otherwise it only notifies you.
+- **Free memory**: In away mode, when available memory falls below 10%, it freezes the programs using the most memory. If that isn't enough after 30 seconds, it closes them. Protected tasks and programs on the list are left alone, and everything is unfrozen when you return.
+- **Heat and battery**: When it's too hot or the battery is low, it lowers the CPU frequency first. If it gets worse, it hibernates: with a 60-second countdown when you're there, right away in away mode.
+- **API relay**: A small program you start yourself. Point the agent's API address at it and it resends requests after a network drop. Resending costs extra tokens, so it isn't used by default.
 
 ## Accounts and storage
 
-It reads your chat logs and matches each file to the chat that wrote it. What a chat wrote, what it downloaded, how much space it all takes: you can look it up. Shared stuff like model caches gets its own line, so no single chat gets blamed for it.
+- **Find files**: Arcturus reads chat logs and lists which files each chat wrote or downloaded and how much space they take. You can also go the other way: give it a path and find the chat that created it. It can't see downloads whose command doesn't name a path, or files that programs generate on their own unless they land in a folder the chat created.
+- **Shared caches**: Hugging Face, pip, conda, npm, Docker and WSL caches are shared, so they're listed separately with the chats that used them, and don't count against any one chat.
+- **Supported agents**: Claude Code and Codex. It only reads tested versions, and stops rather than guessing if it can't read the format.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/files-en-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/files-en-light.svg">
-    <img alt="Without Arcturus: a pile of files, nobody knows whose. With it: files line up under their chat, shared caches stand apart, and you can see who wrote what and how big it is." src="docs/assets/files-en-light.svg" width="100%">
-  </picture>
-</p>
+This data stays on your computer. It holds paths, sizes, times and short command summaries, never chat text, and nothing is uploaded.
 
-All of this stays on your computer. It doesn't keep your chat text, and it doesn't send it anywhere.
+These are still in development:
+
+- **Assign chats to accounts**: The Claude desktop app keeps its chat list per account, so when you switch accounts you can't see chats from the others. This lets you group chats: some stay on the current account, some go to a few accounts you pick, and some show up on all of them. Chats from one project are grouped by the folders they changed, and you pick by hand when that isn't clear.
+- **Search chats**: Search all your Claude Code and Codex chats at once.
+- **Cleanup and archive**: When a project ends, list the files that belong only to it, then archive them or move them to a recycle area. You can undo this.
 
 ## Protection
 
-When memory runs out, something has to go, but some programs can't be closed. So there's a list, and it leaves those alone. An agent can ask to change the list, but you have to say yes.
+- **Programs that can't be closed**: When memory runs out something has to go, so there's a list of programs that are left alone. Windows system programs, security software and Arcturus itself are always on it. Claude, Codex, terminals, VS Code and Office are on it by default. Programs are matched by full path, so the same name in another location doesn't count. Agents can't change the list themselves. They can only ask, and it takes effect when you approve.
+- **VPN down, network off**: Some programs you only want going out through a VPN or proxy, but when the VPN drops they usually just use your real connection, and you never find out. Put them on this list and the firewall only lets them use the VPN, so when it drops they're offline. When the network changes, it also checks which country your exit is in. If it can't tell, they're cut off. If the country is wrong, you choose whether they're cut off, frozen or closed. Programs that were cut off come back when the exit is right. It only covers programs on the list, so anything they start has to be added separately. This needs a small Windows service.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/guard-list-en-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/guard-list-en-light.svg">
-    <img alt="When memory runs low, programs on the list are left alone. Others are frozen first and closed if needed." src="docs/assets/guard-list-en-light.svg" width="100%">
-  </picture>
-</p>
+The page for editing these two lists is still in development. For now you can view them and submit requests.
 
-Some programs you only want going out through a VPN or proxy. But when the VPN drops, they usually just use your real connection, and you never find out.
+## Install
 
-Add those programs here. If the VPN drops or the exit is in the wrong region, they lose their connection until it's right again. This one needs a very small Windows service installed as well.
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/guard-exit-en-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/guard-exit-en-light.svg">
-    <img alt="The VPN drops. Without Arcturus: the program goes out over your real connection. With it: the program is blocked, and back online when the VPN returns." src="docs/assets/guard-exit-en-light.svg" width="100%">
-  </picture>
-</p>
-
-## Get started
-
-It's early days: Windows only, and you build it yourself. Setup notes are [here](docs/BUILDING.md).
+It's early: Windows only, and you build it yourself. Setup notes are in [BUILDING](docs/BUILDING.md).
 
 ```powershell
 git clone https://github.com/OctopusTide/arcturus
 cd arcturus
 cargo build --workspace --locked
+cd target\debug
 ```
+
+## Usage
 
 Start the background program and leave this window open:
 
 ```powershell
-.\target\debug\away-guard-daemon.exe
+.\away-guard-daemon.exe
 ```
 
-In another window, hook it up to Claude Code. Drop `--apply` if you want to see what it would change first:
+In another window, also in `target\debug`, connect it to Claude Code. Without `--apply` it only shows what would change:
 
 ```powershell
-.\target\debug\away-guard-hook.exe install --agent claude-code --apply
+.\away-guard-hook.exe install --agent claude-code --apply
 ```
 
-That's it for network-drop resume. When you're heading out:
+Common commands:
 
 ```powershell
-.\target\debug\away-guard.exe protect --pid 12345   # protect a program, like a training script
-.\target\debug\away-guard.exe away                  # I'm leaving
-.\target\debug\away-guard.exe back                  # I'm back
+.\away-guard.exe status                  # battery, temperature, memory, network
+.\away-guard.exe protect --pid 12345     # protect a program and what it starts
+.\away-guard.exe tasks                   # protected tasks
+.\away-guard.exe away                    # enter away mode
+.\away-guard.exe back                    # leave away mode
+.\away-guard.exe resume show             # chats waiting to continue
+.\away-guard.exe network show            # current network
+.\away-guard.exe files scan              # count files now
+.\away-guard.exe files top               # chats using the most space
+.\away-guard.exe files find <path-part>  # which chat created this path
+.\away-guard.exe files caches            # shared caches
+.\away-guard.exe permission list         # programs that can't be closed
+.\away-guard.exe --help                  # all commands
 ```
 
-Careful, `away` really does things: it locks the screen, turns off the display, and if memory runs out it freezes or even closes programs that aren't on the list. Save your work first.
+## Careful
+
+`away` really acts: it locks the screen, turns off the display, and when memory runs low it freezes or even closes programs that aren't on the list. Save your work first.
 
 Supported versions and known issues are in [Status](docs/STATUS.md).
 
----
+## Docs
 
-<p align="center">
-  <a href="ARCHITECTURE.md">Architecture</a> · <a href="TASKS.md">Tasks</a> · <a href="docs/INTERFACES.md">Interfaces</a> · <a href="docs/STATUS.md">Status</a> · <a href="LICENSE">MIT</a>
-  <br>
-  <sub>Those docs are in Chinese for now.</sub>
-</p>
+[Architecture](ARCHITECTURE.md) · [Tasks](TASKS.md) · [Interfaces](docs/INTERFACES.md) · [Status](docs/STATUS.md) (in Chinese for now)
+
+## License
+
+[MIT](LICENSE)
