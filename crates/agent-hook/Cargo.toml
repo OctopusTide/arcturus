@@ -1,0 +1,22 @@
+[package]
+name = "agent-hook"
+description = "What agents' hooks run: turns hook input into the unified format and hands it to the daemon; installs our hooks on request"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+# Binary name must match proto::names::HOOK_BIN.
+[[bin]]
+name = "away-guard-hook"
+path = "src/main.rs"
+
+[dependencies]
+agents.workspace = true
+proto.workspace = true
+platform.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+
+[dev-dependencies]
+daemon.workspace = true
+tempfile.workspace = true

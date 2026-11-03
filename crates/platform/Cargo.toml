@@ -1,0 +1,25 @@
+[package]
+name = "platform"
+description = "OS implementations of the framework's traits (only Windows today)"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+daemon.workspace = true
+agents.workspace = true
+proto.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["net", "rt-multi-thread", "signal", "io-util", "macros", "sync"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys.workspace = true
+windows-link.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(windows)'.dev-dependencies]
+windows-sys.workspace = true

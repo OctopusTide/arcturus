@@ -1,0 +1,6 @@
+/target
+# Lid test outputs (machine-specific)
+/tests/lid-journal.json
+/tests/lid-test-*.log
+# Real-machine file report written by the ignored files test
+files-report.json

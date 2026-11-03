@@ -1,0 +1,32 @@
+[package]
+name = "relay"
+description = "Local, memory-only API relay: stream normally and buffer while away"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "away-guard-relay"
+path = "src/main.rs"
+required-features = ["daemon-mode"]
+
+[features]
+default = ["daemon-mode"]
+daemon-mode = ["dep:platform", "dep:daemon"]
+
+[dependencies]
+proto.workspace = true
+platform = {workspace=true,optional=true}
+daemon = {workspace=true,optional=true}
+clap.workspace = true
+serde_json.workspace = true
+tokio = {workspace=true,features=["rt-multi-thread","macros","net","io-util","sync","time","process","signal"]}
+bytes = "1"
+http-body = "1"
+http-body-util = "0.1"
+hyper = {version="1",features=["http1","server"]}
+hyper-util = {version="0.1",features=["tokio"]}
+reqwest = {version="=0.13.2",default-features=false,features=["native-tls-no-alpn","system-proxy"]}
+
+[dev-dependencies]
+tempfile.workspace = true

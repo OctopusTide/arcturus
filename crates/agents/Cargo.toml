@@ -1,0 +1,16 @@
+[package]
+name = "agents"
+description = "Agent adapters: where each agent keeps its transcripts, how to read them into one format, its hooks, its version"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+# Portable: std, serde and serde_json only. Feature code (file attribution, search, task
+# protection, resume after an outage) reads the unified format in `model` and `hooks` and never
+# names a specific agent.
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
